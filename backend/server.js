@@ -20,6 +20,10 @@ app.use(newsRoutes);
 app.use(learningRoutes);
 app.use(portfolioRoutes);
 
+app.get("/checkServerStatus", (req, res) => {
+  res.send({ Working: "Ok" });
+});
+
 mongoose
   .connect(
     "mongodb+srv://server_RW:UlO5KbVcl4RJeuqy@cluster0.sbpdf.mongodb.net/userLogin?retryWrites=true&w=majority",
