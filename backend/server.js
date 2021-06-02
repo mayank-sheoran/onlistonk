@@ -1,11 +1,27 @@
 const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
-require("dotenv").config();
+
 const app = express();
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
 app.use(cors());
+const http = require("http").createServer(app);
+const io = require("socket.io")(http, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"],
+  },
+});
+
+const chat = [];
+io.on("connection", (socket) => {
+  socket.on("message", ({ name, message }) => {
+    console.log(chat);
+    chat.push({ name: name, message: message });
+    io.emit("chat", chat);
+  });
+});
 
 const loginRoutes = require("./routes/login");
 const registerRoutes = require("./routes/register");
@@ -14,15 +30,15 @@ const fetchNews = require("./api/fetchNews");
 const learningRoutes = require("./routes/learning");
 const portfolioRoutes = require("./routes/portfolio");
 
+app.post("/getChat", (req, res) => {
+  res.send(chat);
+});
+
 app.use(loginRoutes);
 app.use(registerRoutes);
 app.use(newsRoutes);
 app.use(learningRoutes);
 app.use(portfolioRoutes);
-
-app.get("/checkServerStatus", (req, res) => {
-  res.send({ Working: "Ok" });
-});
 
 mongoose
   .connect(
@@ -30,7 +46,7 @@ mongoose
     { useUnifiedTopology: true }
   )
   .then((result) => {
-    app.listen(process.env.PORT || 3001);
+    http.listen(3001);
     fetchNews();
     setInterval(fetchNews, 43200000);
   })
